@@ -74,7 +74,7 @@ if __name__ == "__main__":
         / "train_images"
         / "20110119082634Lh.jpeg"
     )
-    output_dir = Path(__file__).resolve().parent / "output"
+    output_dir = Path(__file__).resolve().parent / "output/medin_filter_experiments"
     # for larger_kernel_size in (5, 7, 9, 11, 13):
     #     run_staged_kernel_experiment(
     #         str(input_image),
