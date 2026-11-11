@@ -74,7 +74,7 @@ if __name__ == "__main__":
         / "train_images"
         / "20110119082634Lh.jpeg"
     )
-    output_dir = Path(__file__).resolve().parent / "output/medin_filter_experiments"
+    output_dir = Path(__file__).resolve().parent / "output/median_filter_experiments"
     # for larger_kernel_size in (5, 7, 9, 11, 13):
     #     run_staged_kernel_experiment(
     #         str(input_image),
@@ -97,6 +97,8 @@ if __name__ == "__main__":
         current_input = input_image
         kernel_output_dir = output_dir / f"{kernel_size}K"
         input_image_1 = cv2.imread(str(input_image))
+        if input_image_1 is None:
+                raise ValueError(f"Failed to read the image from {input_image}.")
         cv2.imwrite(str(kernel_output_dir / "a_image.jpeg"), input_image_1)
 
         for filter_pass in range(1, 11):
