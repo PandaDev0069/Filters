@@ -2,7 +2,56 @@ import os
 import cv2
 from pathlib import Path
 
-from bilateral_filter import apply_bilateral_filter
+if __package__:
+    from .bilateral_filter import apply_bilateral_filter
+else:
+    from bilateral_filter import apply_bilateral_filter
+
+
+def prepare_fixed_clahe_input(corrected, disk_mask, percentiles=(1.0, 99.5)):
+    """Scale the corrected float image and fill space with a neutral intensity."""
+    import numpy as np
+    if __package__:
+        from .normalization import robust_unit, to_uint8
+    else:
+        from normalization import robust_unit, to_uint8
+
+    unit, stats = robust_unit(corrected, disk_mask, percentiles)
+    image = to_uint8(unit)
+    image[~disk_mask] = int(np.median(image[disk_mask]))
+    return image, stats
+
+
+def clahe_filter(image, clip_limit=2.0, tile_grid_size=(8, 8), disk_mask=None):
+    """Apply the notebook's grayscale CLAHE to a prepared uint8 array.
+
+    The existing apply_clahe_filter() below keeps its LAB-color behavior.
+    Use prepare_fixed_clahe_input() first for polynomial-corrected floats.
+    """
+    import math
+    import numpy as np
+
+    if image.dtype != np.uint8 or image.ndim != 2:
+        raise ValueError("Notebook CLAHE requires a two-dimensional uint8 image.")
+    if not math.isfinite(clip_limit) or clip_limit <= 0:
+        raise ValueError("CLAHE clip limit must be finite and positive.")
+    grid = tuple(tile_grid_size)
+    if (len(grid) != 2 or any(int(v) != v or v < 1 for v in grid)
+            or grid[0] > image.shape[1] or grid[1] > image.shape[0]):
+        raise ValueError("Tile counts must be positive integers within the image dimensions.")
+    result = cv2.createCLAHE(
+        clipLimit=float(clip_limit), tileGridSize=tuple(map(int, grid))
+    ).apply(image)
+    if disk_mask is not None:
+        if disk_mask.shape != image.shape:
+            raise ValueError("Disk mask must match the image dimensions.")
+        result[~disk_mask] = 0
+    return result
+
+
+def apply_clahe_setting(clahe_input, disk_mask, variant):
+    """Notebook-compatible wrapper for a clip_limit/tile_grid variant."""
+    return clahe_filter(clahe_input, variant["clip_limit"], variant["tile_grid"], disk_mask)
 
 
 def apply_clahe_filter(input_path, output_path, clip_limit=2.0, tile_grid_size=(8, 8)):

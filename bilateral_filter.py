@@ -2,6 +2,29 @@ import os
 import cv2
 from pathlib import Path
 
+
+def bilateral_filter(image, diameter=5, sigma_color=15, sigma_space=3,
+                     disk_mask=None, preserve_exterior=False):
+    """Return the section 17/18 filter without file encoding or normalization."""
+    import math
+    import numpy as np
+
+    if (not isinstance(diameter, (int, np.integer)) or diameter < 1
+            or not math.isfinite(sigma_color) or sigma_color <= 0
+            or not math.isfinite(sigma_space) or sigma_space <= 0):
+        raise ValueError("Use a positive integer diameter and positive finite sigmas.")
+    filtered = cv2.bilateralFilter(
+        image, int(diameter), float(sigma_color), float(sigma_space),
+        borderType=cv2.BORDER_REFLECT_101,
+    )
+    if disk_mask is not None and not preserve_exterior:
+        mask = np.asarray(disk_mask, dtype=bool)
+        if mask.shape != image.shape[:2]:
+            raise ValueError("Disk mask must match the image dimensions.")
+        filtered[~mask] = 0
+    return filtered
+
+
 def apply_bilateral_filter(input_path, output_path, diameter=9, sigma_color=15, sigma_space=3):
     """
     Applies a bilateral filter to an image and saves the result.

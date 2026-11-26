@@ -3,6 +3,25 @@ import cv2
 from pathlib import Path
 
 
+def median_filter(image, kernel_size=3, disk_mask=None):
+    """Filter an array in memory; apply the optional mask after filtering.
+
+    This ordering matches section 4 of the preprocessing notebook.
+    The input array is never modified.
+    """
+    import numpy as np
+
+    if not isinstance(kernel_size, (int, np.integer)) or kernel_size < 1 or kernel_size % 2 != 1:
+        raise ValueError("Kernel size must be a positive odd integer.")
+    filtered = cv2.medianBlur(image, int(kernel_size))
+    if disk_mask is not None:
+        mask = np.asarray(disk_mask, dtype=bool)
+        if mask.shape != image.shape[:2]:
+            raise ValueError("Disk mask must match the image dimensions.")
+        filtered[~mask] = 0
+    return filtered
+
+
 def apply_median_filter(input_path, output_path, kernel_size=3):
     """
     Applies a median filter to an image and saves the result.

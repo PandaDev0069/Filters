@@ -1,0 +1,14 @@
+# Numerical filters and lossless stage files
+numpy
+opencv-python
+pillow
+
+# Dataset helpers, exports, optional plots, and evaluation
+pandas
+tqdm
+matplotlib
+pycocotools
+scipy
+
+# Behavioral and notebook-parity tests
+pytest
